@@ -1,0 +1,51 @@
+version: "3"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    restart: "no"
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - devops
+    depends_on:
+      - database
+      - redis
+    links:
+      - database:devops-database
+      - redis:devops-redis
+
+  database:
+    image: mysql:latest
+    restart: "no"
+    networks:
+      - devops
+    ports:
+      - 3306:3306
+    volumes:
+      - devops-database:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "laravel"
+    command: mysqld --max_allowed_packet=512M
+
+  redis:
+    image: redis:latest
+    restart: "no"
+    networks:
+      - devops
+    volumes:
+      - devops-redis:/data
+
+networks:
+  devops:
+    driver: bridge
+
+volumes:
+  devops-database:
+    driver: local
+  devops-redis:
+    driver: local
